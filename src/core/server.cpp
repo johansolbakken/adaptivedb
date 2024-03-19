@@ -81,6 +81,11 @@ namespace AdaptiveDB
                     continue;
                 }
 
+                while (m_clientSocketsQueue.size() >= m_maxClientSockets)
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+
                 std::lock_guard<std::mutex> lock(m_mutex);
                 m_clientSocketsQueue.push(clientSocket);
             } });

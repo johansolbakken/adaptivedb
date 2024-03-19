@@ -46,5 +46,6 @@ namespace AdaptiveDB
     std::mutex m_mutex;
     std::thread m_serverThread;
     bool m_running = false;
+    int m_maxClientSockets = 30;
   };
 } // namespace AdaptiveDB
