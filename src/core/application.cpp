@@ -11,14 +11,17 @@ namespace AdaptiveDB
 
     Application::~Application() {}
 
+    void index(Request &req, nlohmann::json &res)
+    {
+        res["message"] = "Hello, World!";
+    }
+
     void Application::run()
     {
         auto version = versionConfig();
         std::cout << "AdaptiveDB v" << version.major << "." << version.minor << "." << version.patch << std::endl;
         
-        m_server->get("/", [](Request &req, nlohmann::json &res) {
-            res["message"] = "Hello, World!";
-        });
+        m_server->get("/", index);
 
         m_server->run();
     }
