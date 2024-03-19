@@ -13,5 +13,6 @@ public:
 
 private:
   Ref<Server> m_server;
+  bool m_running = false;
 };
 } // namespace AdaptiveDB

@@ -1,5 +1,7 @@
 #include "application.h"
 
+#include "handler/index.h"
+
 #include <iostream>
 
 namespace AdaptiveDB
@@ -11,18 +13,18 @@ namespace AdaptiveDB
 
     Application::~Application() {}
 
-    void index(Request &req, nlohmann::json &res)
-    {
-        res["message"] = "Hello, World!";
-    }
-
     void Application::run()
     {
         auto version = versionConfig();
         std::cout << "AdaptiveDB v" << version.major << "." << version.minor << "." << version.patch << std::endl;
-        
+
         m_server->get("/", index);
 
-        m_server->run();
+        m_server->run(3000);
+
+        m_running = true;
+        while (m_running) {
+            m_server->update();
+        }
     }
 } // namespace AdaptiveDB

@@ -2,6 +2,8 @@
 
 #include <map>
 #include <functional>
+#include <queue>
+#include <thread>
 
 #include "nlohmann/json.hpp"
 
@@ -34,10 +36,15 @@ namespace AdaptiveDB
     void del(const std::string &path, std::function<void(Request &req, nlohmann::json &res)> callback);
 
     void run(int port = 3000);
+    void update();
 
   private:
     std::map<Method, std::map<std::string, std::function<void(Request &req, nlohmann::json &res)>>> routes;
     int m_port = 3000;
     int m_serverSocket = 0;
+    std::queue<int> m_clientSocketsQueue;
+    std::mutex m_mutex;
+    std::thread m_serverThread;
+    bool m_running = false;
   };
 } // namespace AdaptiveDB
