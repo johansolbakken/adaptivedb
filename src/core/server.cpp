@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <poll.h>
 
 #include <iostream>
 
@@ -15,6 +16,9 @@ namespace AdaptiveDB
 
     Server::~Server()
     {
+        m_running = false;
+        close(m_serverSocket);
+        std::cout << "Server stopped" << std::endl;
     }
 
     // TODO: If path exists print warning
@@ -70,39 +74,31 @@ namespace AdaptiveDB
         std::cout << "Server is running on port " << m_port << std::endl;
 
         m_running = true;
-        m_serverThread = std::thread([this]()
-                                     {
-            while (m_running)
-            {
-                int clientSocket = accept(m_serverSocket, nullptr, nullptr);
-                if (clientSocket == -1)
-                {
-                    std::cerr << "Error: Can't accept socket" << std::endl;
-                    continue;
-                }
-
-                while (m_clientSocketsQueue.size() >= m_maxClientSockets)
-                {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                }
-
-                std::lock_guard<std::mutex> lock(m_mutex);
-                m_clientSocketsQueue.push(clientSocket);
-            } });
     }
 
     void Server::update()
     {
-        if (m_clientSocketsQueue.empty())
+        bool hasClient = false;
+        pollfd pollFd;
+        pollFd.fd = m_serverSocket;
+        pollFd.events = POLLIN;
+        pollFd.revents = 0;
+
+        if (poll(&pollFd, 1, 1000) > 0)
+        {
+            hasClient = true;
+        }
+
+        if (!hasClient)
         {
             return;
         }
 
-        auto clientSocket = 0;
+        int clientSocket = accept(m_serverSocket, nullptr, nullptr);
+        if (clientSocket == -1)
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            clientSocket = m_clientSocketsQueue.front();
-            m_clientSocketsQueue.pop();
+            std::cerr << "Error: Can't accept socket" << std::endl;
+            return;
         }
 
         char buffer[4096];

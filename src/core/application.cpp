@@ -3,15 +3,30 @@
 #include "handler/index.h"
 
 #include <iostream>
+#include <sys/signal.h>
 
 namespace AdaptiveDB
 {
+    Application *Application::m_instance = nullptr;
+
     Application::Application()
         : m_server(createRef<Server>())
     {
+        if (!m_instance) {
+            m_instance = this;
+        } else {
+            std::cerr << "Error: Application already exists" << std::endl;
+            std::exit(1);
+        }
+
+        signal(SIGINT, [](int) {
+            Application::instance().stop();
+        });
     }
 
-    Application::~Application() {}
+    Application::~Application() {
+
+    }
 
     void Application::run()
     {

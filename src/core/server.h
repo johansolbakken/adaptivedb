@@ -42,10 +42,6 @@ namespace AdaptiveDB
     std::map<Method, std::map<std::string, std::function<void(Request &req, nlohmann::json &res)>>> routes;
     int m_port = 3000;
     int m_serverSocket = 0;
-    std::queue<int> m_clientSocketsQueue;
-    std::mutex m_mutex;
-    std::thread m_serverThread;
     bool m_running = false;
-    int m_maxClientSockets = 30;
   };
 } // namespace AdaptiveDB
