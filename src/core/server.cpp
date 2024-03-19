@@ -1,11 +1,11 @@
 #include "server.h"
 
+#include "core/base.h"
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <poll.h>
-
-#include <iostream>
 
 namespace AdaptiveDB
 {
@@ -17,7 +17,7 @@ namespace AdaptiveDB
     {
         m_running = false;
         close(m_serverSocket);
-        std::cout << "Server stopped" << std::endl;
+        Log::info("Server stopped");
     }
 
     // TODO: If path exists print warning
@@ -49,7 +49,7 @@ namespace AdaptiveDB
         m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (m_serverSocket == -1)
         {
-            std::cerr << "Error: Can't create socket" << std::endl;
+            Log::error("Can't create socket");
             return;
         }
 
@@ -60,17 +60,17 @@ namespace AdaptiveDB
 
         if (bind(m_serverSocket, (sockaddr *)&serverAddress, sizeof(serverAddress)) == -1)
         {
-            std::cerr << "Error: Can't bind socket" << std::endl;
+            Log::error("Can't bind socket");
             return;
         }
 
         if (listen(m_serverSocket, 10) == -1)
         {
-            std::cerr << "Error: Can't listen socket" << std::endl;
+            Log::error("Can't listen on socket");
             return;
         }
 
-        std::cout << "Server is running on port " << m_port << std::endl;
+        Log::info(fmt::format("Server is running on port {}", m_port));
 
         m_running = true;
     }
@@ -96,7 +96,7 @@ namespace AdaptiveDB
         int clientSocket = accept(m_serverSocket, nullptr, nullptr);
         if (clientSocket == -1)
         {
-            std::cerr << "Error: Can't accept socket" << std::endl;
+            Log::error("Can't accept client socket");
             return;
         }
 
@@ -105,7 +105,7 @@ namespace AdaptiveDB
 
         if (bytesRead == -1)
         {
-            std::cerr << "Error: Can't read from socket" << std::endl;
+            Log::error("Can't read from client socket");
             return;
         }
 

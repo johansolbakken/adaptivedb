@@ -2,7 +2,6 @@
 
 #include "handler/index.h"
 
-#include <iostream>
 #include <sys/signal.h>
 
 namespace AdaptiveDB
@@ -12,34 +11,37 @@ namespace AdaptiveDB
     Application::Application()
         : m_server(createRef<Server>())
     {
-        if (!m_instance) {
+        if (!m_instance)
+        {
             m_instance = this;
-        } else {
-            std::cerr << "Error: Application already exists" << std::endl;
+        }
+        else
+        {
+            Log::error("Error: Application already exists. Exiting...");
             std::exit(1);
         }
 
-        // Control-C handler. We want to for instance close the server when the user presses Control-C    
-        signal(SIGINT, [](int) {
-            Application::instance().stop();
-        });
+        // Control-C handler. We want to for instance close the server when the user presses Control-C
+        signal(SIGINT, [](int)
+               { Application::instance().stop(); });
     }
 
-    Application::~Application() {
-
+    Application::~Application()
+    {
     }
 
     void Application::run()
     {
         auto version = versionConfig();
-        std::cout << "AdaptiveDB v" << version.major << "." << version.minor << "." << version.patch << std::endl;
+        Log::info(fmt::format("AdaptiveDB v{}.{}.{}", version.major, version.minor, version.patch));
 
         m_server->get("/", index);
 
         m_server->run(3000);
 
         m_running = true;
-        while (m_running) {
+        while (m_running)
+        {
             m_server->update();
         }
     }

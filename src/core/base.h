@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "core/log.h"
+
 namespace AdaptiveDB
 {
     template <typename T>

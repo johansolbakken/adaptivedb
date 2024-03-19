@@ -1,13 +1,11 @@
 #include "index.h"
 
-#include <iostream>
+#include "core/base.h"
 
 namespace AdaptiveDB
 {
     void index(Request &req, nlohmann::json &res)
     {
-        std::cout << req.body << std::endl;
-
         if (!req.body.contains("operator"))
         {
             res["error"] = "No operator provided";

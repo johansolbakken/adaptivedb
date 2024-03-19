@@ -1,3 +1,6 @@
 [submodule "vendor/json"]
 	path = vendor/json
 	url = git@github.com:nlohmann/json.git
+[submodule "vendor/fmt"]
+	path = vendor/fmt
+	url = git@github.com:fmtlib/fmt.git
