@@ -30,6 +30,12 @@ This will compile all the necessary files and produce an executable. To run Adap
 ./AdaptiveDB
 ```
 
+## Building with Docker
+~~~bash
+docker build -t adaptivedb .
+docker run -p 3000:3000 adaptivedb
+~~~
+
 ## Running the Tests
 
 Todo
