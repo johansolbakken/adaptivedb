@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core/base.h"
+#include "core/server.h"
+
 namespace AdaptiveDB {
 class Application {
 public:
@@ -7,5 +10,8 @@ public:
   ~Application();
 
   void run();
+
+private:
+  Ref<Server> m_server;
 };
 } // namespace AdaptiveDB

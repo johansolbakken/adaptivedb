@@ -1,0 +1,6 @@
+// VersionConfig.h.in
+#pragma once
+
+#define AdaptiveDB_VERSION_MAJOR @AdaptiveDB_VERSION_MAJOR@
+#define AdaptiveDB_VERSION_MINOR @AdaptiveDB_VERSION_MINOR@
+#define AdaptiveDB_VERSION_PATCH @AdaptiveDB_VERSION_PATCH@

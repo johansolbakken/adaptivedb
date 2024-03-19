@@ -2,8 +2,20 @@
 
 #include <iostream>
 
-namespace AdaptiveDB {
-Application::Application() {}
-Application::~Application() {}
-void Application::run() { std::cout << "Hello, AdaptiveDB!" << std::endl; }
+namespace AdaptiveDB
+{
+    Application::Application()
+        : m_server(createRef<Server>())
+    {
+    }
+
+    Application::~Application() {}
+
+    void Application::run()
+    {
+        auto version = versionConfig();
+        std::cout << "AdaptiveDB v" << version.major << "." << version.minor << "." << version.patch << std::endl;
+        
+        m_server->run();
+    }
 } // namespace AdaptiveDB
