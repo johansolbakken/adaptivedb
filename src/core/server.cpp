@@ -118,6 +118,13 @@ namespace AdaptiveDB
         std::string requestMethod = request.substr(0, request.find(" "));
         std::string requestPath = request.substr(request.find(" ") + 1, request.find(" ", request.find(" ") + 1) - request.find(" ") - 1);
 
+        size_t bodyStart = request.find("\r\n\r\n");
+        if (bodyStart != std::string::npos)
+        {
+            std::string body = request.substr(bodyStart + 2);
+            req.body = nlohmann::json::parse(body);
+        }
+
         if (requestMethod == "GET")
         {
             req.method = Method::GET;
