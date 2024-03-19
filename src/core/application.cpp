@@ -19,6 +19,7 @@ namespace AdaptiveDB
             std::exit(1);
         }
 
+        // Control-C handler. We want to for instance close the server when the user presses Control-C    
         signal(SIGINT, [](int) {
             Application::instance().stop();
         });
