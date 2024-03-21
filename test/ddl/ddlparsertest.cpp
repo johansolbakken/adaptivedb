@@ -23,7 +23,7 @@ int main()
 
             model Salary {
                 SalaryID Int @id
-                // EmployeeID Int @references(Employee, EmployeeID)
+                EmployeeID Int @references(Employee, EmployeeID)
                 Salary Float
                 FromDate Date
                 ToDate Date?
@@ -66,6 +66,11 @@ int main()
             std::cout << std::endl;
             std::cout << "    Nullable: " << (field.nullable ? "true" : "false") << std::endl;
             std::cout << "    Primary: " << (field.primary ? "true" : "false") << std::endl;
+
+            if (field.foreignKey)
+            {
+                std::cout << "    Foreign Key: " << field.foreignKey->model << "." << field.foreignKey->field << std::endl;
+            }
         }
     }
 }

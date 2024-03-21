@@ -2,6 +2,7 @@
 
 #include "ddl/ddllexer.h"
 #include <vector>
+#include <optional>
 
 namespace AdaptiveDB
 {
@@ -14,6 +15,12 @@ namespace AdaptiveDB
         Blob
     };
 
+    struct DDLForeignKey
+    {
+        std::string model;
+        std::string field;
+    };
+
     struct DDLField
     {
         DDLBasicType type;
@@ -21,7 +28,7 @@ namespace AdaptiveDB
         bool nullable;
         // bool unique; TODO: Add @unique to DDL
         bool primary;
-        // DDLForeignKey foreignKey; TODO: Add @foreign to DDL
+        std::optional<DDLForeignKey> foreignKey;
     };
 
     struct DDLModel

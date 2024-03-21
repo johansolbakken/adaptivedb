@@ -102,6 +102,46 @@ namespace AdaptiveDB
                 }
 
                 // Foreign keys
+                //@references(Employee, EmployeeID)
+                if (m_tokens[m_position].type == DDLTokenType::Identifier && m_tokens[m_position].value == "references")
+                {
+                    DDLForeignKey fk;
+                    m_position++;
+                    if (!expect(DDLTokenType::OpenParen))
+                    {
+                        throw std::runtime_error("Expected (");
+                    }
+                    m_position++;
+
+                    if (!expect(DDLTokenType::Identifier))
+                    {
+                        throw std::runtime_error("Expected identifier");
+                    }
+                    fk.model = m_tokens[m_position].value;
+                    m_position++;
+
+                    if (!expect(DDLTokenType::Comma))
+                    {
+                        throw std::runtime_error("Expected ,");
+                    }
+                    m_position++;
+
+                    if (!expect(DDLTokenType::Identifier))
+                    {
+                        throw std::runtime_error("Expected identifier");
+                    }
+                    fk.field = m_tokens[m_position].value;
+                    m_position++;
+
+                    if (!expect(DDLTokenType::CloseParen))
+                    {
+                        throw std::runtime_error("Expected )");
+                    }
+                    m_position++;
+
+                    field.foreignKey = fk;
+                }
+
             }
 
             model.fields.push_back(field);
