@@ -5,7 +5,7 @@
 
 namespace AdaptiveDB
 {
-    enum class TokenType
+    enum class DDLTokenType
     {
         Model,
         Identifier,
@@ -18,16 +18,12 @@ namespace AdaptiveDB
         CloseParen,
 
         // Types
-        String,
-        Int,
-        Float,
-        Date,
-        Blob,
+        Type
     };
 
     struct DDLToken
     {
-        TokenType type;
+        DDLTokenType type;
         std::string value;
         int position;
     };

@@ -23,7 +23,7 @@ namespace AdaptiveDB
         std::string token;
         char ch;
 
-        auto addToken = [&](TokenType type, const std::string &value)
+        auto addToken = [&](DDLTokenType type, const std::string &value)
         {
             tokens.push_back({type, value, m_position});
         };
@@ -39,6 +39,15 @@ namespace AdaptiveDB
                 continue;
             }
 
+            // Skip comments
+            if (ch == '/' && m_source[m_position + 1] == '/')
+            {
+                while (m_position < m_source.length() && m_source[m_position] != '\n')
+                    ++m_position;
+                ++m_position;
+                continue;
+            } 
+
             if (std::isalpha(ch))
             { // Start of a keyword or identifier
                 size_t start = m_position;
@@ -47,14 +56,16 @@ namespace AdaptiveDB
                 std::string value = m_source.substr(start, m_position - start);
 
                 // Match keywords or types
-                static const std::map<std::string, TokenType> keywords = {
-                    {"model", TokenType::Model},
-                    {"String", TokenType::String},
-                    {"Int", TokenType::Int},
-                    {"Float", TokenType::Float},
-                    {"Date", TokenType::Date},
+                static const std::map<std::string, DDLTokenType> keywords = {
+                    {"model", DDLTokenType::Model},
+                    {"Int", DDLTokenType::Type},
+                    {"Float", DDLTokenType::Type},
+                    {"Date", DDLTokenType::Type},
+                    {"String", DDLTokenType::Type},
+                    {"Blob", DDLTokenType::Type},
                     // Add other keywords and types as needed
                 };
+
 
                 auto it = keywords.find(value);
                 if (it != keywords.end())
@@ -63,42 +74,42 @@ namespace AdaptiveDB
                 }
                 else
                 {
-                    addToken(TokenType::Identifier, value);
+                    addToken(DDLTokenType::Identifier, value);
                 }
             }
             else if (ch == '?')
             {
-                addToken(TokenType::QuestionMark, "?");
+                addToken(DDLTokenType::QuestionMark, "?");
                 ++m_position;
             }
             else if (ch == '{')
             {
-                addToken(TokenType::OpenBrace, "{");
+                addToken(DDLTokenType::OpenBrace, "{");
                 ++m_position;
             }
             else if (ch == '}')
             {
-                addToken(TokenType::CloseBrace, "}");
+                addToken(DDLTokenType::CloseBrace, "}");
                 ++m_position;
             }
             else if (ch == '(')
             {
-                addToken(TokenType::OpenParen, "(");
+                addToken(DDLTokenType::OpenParen, "(");
                 ++m_position;
             }
             else if (ch == ')')
             {
-                addToken(TokenType::CloseParen, ")");
+                addToken(DDLTokenType::CloseParen, ")");
                 ++m_position;
             }
             else if (ch == '@')
             {
-                addToken(TokenType::At, "@");
+                addToken(DDLTokenType::At, "@");
                 ++m_position;
             }
             else if (ch == ',')
             {
-                addToken(TokenType::Comma, ",");
+                addToken(DDLTokenType::Comma, ",");
                 ++m_position;
             }
             else

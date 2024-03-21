@@ -4,38 +4,30 @@
 
 using namespace AdaptiveDB;
 
-std::string tokenTypeToString(TokenType type)
+std::string tokenTypeToString(DDLTokenType type)
 {
     switch (type)
     {
-    case TokenType::Model:
+    case DDLTokenType::Model:
         return "Model";
-    case TokenType::Identifier:
+    case DDLTokenType::Identifier:
         return "Identifier";
-    case TokenType::OpenBrace:
+    case DDLTokenType::OpenBrace:
         return "OpenBrace";
-    case TokenType::CloseBrace:
+    case DDLTokenType::CloseBrace:
         return "CloseBrace";
-    case TokenType::At:
+    case DDLTokenType::At:
         return "At";
-    case TokenType::QuestionMark:
+    case DDLTokenType::QuestionMark:
         return "QuestionMark";
-    case TokenType::Comma:
+    case DDLTokenType::Comma:
         return "Comma";
-    case TokenType::OpenParen:
+    case DDLTokenType::OpenParen:
         return "OpenParen";
-    case TokenType::CloseParen:
+    case DDLTokenType::CloseParen:
         return "CloseParen";
-    case TokenType::String:
-        return "String";
-    case TokenType::Int:
-        return "Int";
-    case TokenType::Float:
-        return "Float";
-    case TokenType::Date:
-        return "Date";
-    case TokenType::Blob:
-        return "Blob";
+    case DDLTokenType::Type:
+        return "Type";
     default:
         return "Unknown";
     }
