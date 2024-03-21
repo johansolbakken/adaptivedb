@@ -40,7 +40,7 @@ int main()
                 EmployeeID String @id
                 FirstName String
                 LastName String
-                DepartmentID Int?
+                DepartmentID Int? @references(Department, DepartmentID)
                 JobTitle String?
                 HireDate Date
             }
