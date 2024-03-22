@@ -2,18 +2,22 @@
 
 #include "core/base.h"
 
+#include <functional>
+
 /*
 ERROR TYPES:
-- Field referenced in foreign key must exist in model
-- Field referenced in foreign key must have same type as primary key
-- Field referenced in foreign key must be primary key
-- Model referenced in foreign key must exist
-- Every model must have a primary key
-- No duplicate model names
-- No duplicate field names in model
-- Exactly one primary key in model
-- Primary key cannot be nullable
+- [x] Field referenced in foreign key must exist in model
+- [ ] Field referenced in foreign key must have same type as primary key
+- [ ] Field referenced in foreign key must be primary key
+- [x] Model referenced in foreign key must exist
+- [x] Every model must have a primary key
+- [ ] No duplicate model names
+- [ ] No duplicate field names in model
+- [ ] Exactly one primary key in model
+- [ ] Primary key cannot be nullable
 */
+
+#define BIND_FN(fn) std::bind(&DDLSemanticChecker::fn, this, std::placeholders::_1)
 
 namespace AdaptiveDB
 {
@@ -25,11 +29,28 @@ namespace AdaptiveDB
     {
     }
 
-    void DDLSemanticChecker::checkModel(const DDLModel &model)
+    void DDLSemanticChecker::checkModels(const std::vector<DDLModel> &models)
     {
-        // For every reference in the model check if the model exists and the field exists and the field is of the correct type
+        m_models = models;
+        std::vector<std::function<void(const DDLModel &)>> checks = {
+            BIND_FN(fieldReferencedInForeignKeyMustExistInModel),
+            BIND_FN(modelMustHavePrimaryKey),
+        };
+
+        for (const auto &model : models)
+        {
+            for (const auto &check : checks)
+            {
+                check(model);
+            }
+        }
+    }
+
+    void DDLSemanticChecker::fieldReferencedInForeignKeyMustExistInModel(const DDLModel &model)
+    {
         for (const auto &field : model.fields)
         {
+            // Field that is referenced in a foreign key must exist in the model
             if (field.foreignKey.has_value())
             {
                 bool found = false;
@@ -44,38 +65,35 @@ namespace AdaptiveDB
                             if (f.name == field.foreignKey.value().field)
                             {
                                 fieldFound = true;
-                                if (f.type != field.type)
-                                {
-                                    Log::error(fmt::format("Field {} in model {} must have same type as primary key", field.foreignKey.value().field, field.foreignKey.value().model));
-                                }
-
-                                // primary key
-                                if (!f.primary)
-                                {
-                                    Log::error(fmt::format("Field {} in model {} must be primary key", field.foreignKey.value().field, field.foreignKey.value().model));
-                                }
                             }
                         }
                         if (!fieldFound)
                         {
-                            Log::error(fmt::format("Field {} not found in model {}", field.foreignKey.value().field, field.foreignKey.value().model));
+                            m_errors.push_back(fmt::format("Field {} not found in model {}", field.foreignKey.value().field, field.foreignKey.value().model));
                         }
                     }
                 }
                 if (!found)
                 {
-                    Log::error(fmt::format("Model {} not found referenced by {}.{}", field.foreignKey.value().model , model.name, field.name));
+                    m_errors.push_back(fmt::format("Model {} not found referenced by {}.{}", field.foreignKey.value().model , model.name, field.name));
                 }
             }
         }
     }
 
-    void DDLSemanticChecker::checkModels(const std::vector<DDLModel> &models)
+    void DDLSemanticChecker::modelMustHavePrimaryKey(const DDLModel &model)
     {
-        m_models = models;
-        for (const auto &model : models)
+        bool found = false;
+        for (const auto &field : model.fields)
         {
-            checkModel(model);
+            if (field.primary)
+            {
+                found = true;
+            }
+        }
+        if (!found)
+        {
+            m_errors.push_back(fmt::format("Model {} must have a primary key", model.name));
         }
     }
 } // namespace AdaptiveDB

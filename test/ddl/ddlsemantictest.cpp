@@ -1,11 +1,13 @@
 #include "ddl/ddlsemantic.h"
-
-#include <iostream>
+#include "core/base.h"
 
 using namespace AdaptiveDB;
 
 int main()
 {
+    Log::info("Running DDL semantic test");
+    Log::info("Should show error messages to show that the semantic checker is working");
+
     std::string source = R"(
             model Employee {
                 EmployeeID String @id
@@ -22,11 +24,14 @@ int main()
             }
 
             model Salary {
-                SalaryID Int @id
+                // forgot @id
+                SalaryID Int 
+
                 EmployeeID Int @references(Employee, EmployeeID)
                 Salary Float
                 FromDate Date
                 ToDate Date?
+
                 // reference to non-existing model
                 NonExisting Int @references(NonExistingModel, NonExistingField)
             }
@@ -39,4 +44,9 @@ int main()
     // Should show error message because EmployeeID is referenced as Int but is String
     DDLSemanticChecker checker;
     checker.checkModels(models);
+
+    for (auto &error : checker.errors())
+    {
+        Log::error(error);
+    }
 }
