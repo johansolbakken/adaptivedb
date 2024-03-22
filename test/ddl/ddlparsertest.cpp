@@ -1,7 +1,5 @@
 #include "ddl/ddlparser.h"
 
-#include <iostream>
-
 using namespace AdaptiveDB;
 
 int main()
@@ -33,43 +31,54 @@ int main()
     DDLLexer lexer(source);
     DDLParser parser(lexer);
     auto models = parser.parseModels();
+
+    if (parser.errors().size() > 0)
+    {
+        for (auto &error : parser.errors())
+        {
+            Log::error(error);
+        }
+        return 1;
+    }
+
     for (auto &model : models)
     {
-        std::cout << "Model: " << model.name << std::endl;
+        Log::info(fmt::format("Model: {}", model.name));
         for (auto &field : model.fields)
         {
-            std::cout << "  Field: " << field.name << std::endl;
-            std::cout << "    Type: ";
+            Log::info(fmt::format("  Field: {}", field.name));
+            std::string type;
+
             switch (field.type)
             {
             case DDLBasicType::Int:
-                std::cout << "Int";
+                type = "Int";
                 break;
             case DDLBasicType::Float:
 
-                std::cout << "Float";
+                type = "Float";
                 break;
             case DDLBasicType::Date:
-                std::cout << "Date";
+                type = "Date";
                 break;
             case DDLBasicType::String:
-                std::cout << "String";
+                type = "String";
                 break;
             case DDLBasicType::Blob:
-                std::cout << "Blob";
+                type = "Blob";
                 break;
             default:
-                std::cout << "Unknown";
+                type = "Unknown";
                 break;
             }
 
-            std::cout << std::endl;
-            std::cout << "    Nullable: " << (field.nullable ? "true" : "false") << std::endl;
-            std::cout << "    Primary: " << (field.primary ? "true" : "false") << std::endl;
+            Log::info(fmt::format("    Type: {}", type));
+            Log::info(fmt::format("    Nullable: {}", field.nullable ? "true" : "false"));
+            Log::info(fmt::format("    Primary: {}", field.primary ? "true" : "false"));
 
             if (field.foreignKey)
             {
-                std::cout << "    Foreign Key: " << field.foreignKey->model << "." << field.foreignKey->field << std::endl;
+                Log::info(fmt::format("    Foreign Key: {}.{}", field.foreignKey->model, field.foreignKey->field));
             }
         }
     }

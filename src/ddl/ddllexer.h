@@ -35,7 +35,8 @@ namespace AdaptiveDB
         ~DDLLexer();
 
         std::vector<DDLToken> tokenize();
-        std::vector<std::string> errors() const { return m_errors; }
+        const std::vector<std::string>& errors() const { return m_errors; }
+        const std::string& source() const { return m_source; }
 
     private:
         std::string m_source;

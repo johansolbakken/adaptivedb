@@ -22,4 +22,27 @@ namespace AdaptiveDB
     };
     
     VersionConfig versionConfig();
+
+    // Result type for functions that can fail
+    template <typename T, typename E>
+    struct Result
+    {
+        T value;
+        bool m_success;
+        E error;
+
+        operator bool() const { return m_success; }
+        operator T() const { return value; }
+        operator E() const { return error; }
+
+        static Result<T, E> success(T value)
+        {
+            return {value, true, E()};
+        }
+
+        static Result<T, E> fail(E error)
+        {
+            return {T(), false, error};
+        }
+    };
 } // namespace AdaptiveDB

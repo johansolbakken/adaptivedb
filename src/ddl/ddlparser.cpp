@@ -1,7 +1,5 @@
 #include "ddlparser.h"
 
-#include "core/log.h"
-
 namespace AdaptiveDB
 {
     DDLParser::DDLParser(const DDLLexer &lexer)
@@ -9,25 +7,30 @@ namespace AdaptiveDB
     {
     }
 
-    DDLModel DDLParser::parseModel()
+    Result<DDLModel, ParserError> DDLParser::parseModel()
     {
         if (!expect(DDLTokenType::Model))
         {
-            Log::info(fmt::format("{}", m_tokens[m_position].value));
-            throw std::runtime_error("Expected model");
+            LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+            m_errors.push_back(fmt::format("Expected 'model' at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+            return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
         }
         m_position++;
 
         if (!expect(DDLTokenType::Identifier))
         {
-            throw std::runtime_error("1Expected identifier");
+            LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+            m_errors.push_back(fmt::format("Expected identifier at position {} but got '{}'", m_tokens[m_position].position, m_tokens[m_position].value));
+            return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
         }
         std::string modelName = m_tokens[m_position].value;
         m_position++;
 
         if (!expect(DDLTokenType::OpenBrace))
         {
-            throw std::runtime_error("Expected {");
+            LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+            m_errors.push_back(fmt::format("Expected '{{' at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+            return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
         }
         m_position++;
 
@@ -38,8 +41,9 @@ namespace AdaptiveDB
             DDLField field;
             if (!expect(DDLTokenType::Identifier))
             {
-                Log::info(fmt::format("{}", m_tokens[m_position].value));
-                throw std::runtime_error("2Expected identifier");
+                LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+                m_errors.push_back(fmt::format("Expected identifier at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+                return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
             }
             std::string fieldName = m_tokens[m_position].value;
             field.name = fieldName;
@@ -47,7 +51,9 @@ namespace AdaptiveDB
 
             if (!expect(DDLTokenType::Type))
             {
-                throw std::runtime_error("3Expected type");
+                LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+                m_errors.push_back(fmt::format("Expected type at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+                return Result<DDLModel, ParserError>::fail(ParserError::ExpectedType);
             }
             std::string fieldType = m_tokens[m_position].value;
             m_position++;
@@ -75,7 +81,9 @@ namespace AdaptiveDB
             }
             else
             {
-                throw std::runtime_error("Unknown type");
+                LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+                m_errors.push_back(fmt::format("Unknown type at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+                return Result<DDLModel, ParserError>::fail(ParserError::UnknownType);
             }
 
             field.nullable = false;
@@ -109,39 +117,48 @@ namespace AdaptiveDB
                     m_position++;
                     if (!expect(DDLTokenType::OpenParen))
                     {
-                        throw std::runtime_error("Expected (");
+                        LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+                        m_errors.push_back(fmt::format("Expected '(' at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+                        return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
                     }
                     m_position++;
 
                     if (!expect(DDLTokenType::Identifier))
                     {
-                        throw std::runtime_error("Expected identifier");
+                        LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+                        m_errors.push_back(fmt::format("Expected identifier at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+                        return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
                     }
                     fk.model = m_tokens[m_position].value;
                     m_position++;
 
                     if (!expect(DDLTokenType::Comma))
                     {
-                        throw std::runtime_error("Expected ,");
+                        LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+                        m_errors.push_back(fmt::format("Expected ',' at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+                        return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
                     }
                     m_position++;
 
                     if (!expect(DDLTokenType::Identifier))
                     {
-                        throw std::runtime_error("Expected identifier");
+                        LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+                        m_errors.push_back(fmt::format("Expected identifier at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+                        return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
                     }
                     fk.field = m_tokens[m_position].value;
                     m_position++;
 
                     if (!expect(DDLTokenType::CloseParen))
                     {
-                        throw std::runtime_error("Expected )");
+                        LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+                        m_errors.push_back(fmt::format("Expected ')' at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+                        return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
                     }
                     m_position++;
 
                     field.foreignKey = fk;
                 }
-
             }
 
             model.fields.push_back(field);
@@ -149,12 +166,14 @@ namespace AdaptiveDB
 
         if (!expect(DDLTokenType::CloseBrace))
         {
-            throw std::runtime_error("Expected }");
+            LineColumn lc = positionToLineColumn(m_lexer.source(), m_tokens[m_position].position);
+            m_errors.push_back(fmt::format("Expected '}}' at line {}, column {} but got '{}'", lc.line, lc.column, m_tokens[m_position].value));
+            return Result<DDLModel, ParserError>::fail(ParserError::ExpectedIdentifier);
         }
 
         m_position++;
 
-        return model;
+        return Result<DDLModel, ParserError>::success(model);
     }
 
     std::vector<DDLModel> DDLParser::parseModels()
@@ -163,7 +182,12 @@ namespace AdaptiveDB
         std::vector<DDLModel> models;
         while (m_position < m_tokens.size())
         {
-            models.push_back(parseModel());
+            auto model = parseModel();
+            if (model) {
+                models.push_back(model);
+            } else {
+                return models;
+            }
         }
         return models;
     }
