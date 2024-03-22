@@ -58,26 +58,26 @@ namespace AdaptiveDB
             std::string fieldType = m_tokens[m_position].value;
             m_position++;
 
-            field.type = DDLBasicType::Int;
+            field.type = BasicType::Int;
             if (fieldType == "Int")
             {
-                field.type = DDLBasicType::Int;
+                field.type = BasicType::Int;
             }
             else if (fieldType == "Float")
             {
-                field.type = DDLBasicType::Float;
+                field.type = BasicType::Float;
             }
             else if (fieldType == "Date")
             {
-                field.type = DDLBasicType::Date;
+                field.type = BasicType::Date;
             }
             else if (fieldType == "String")
             {
-                field.type = DDLBasicType::String;
+                field.type = BasicType::String;
             }
             else if (fieldType == "Blob")
             {
-                field.type = DDLBasicType::Blob;
+                field.type = BasicType::Blob;
             }
             else
             {

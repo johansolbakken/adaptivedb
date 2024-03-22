@@ -1,6 +1,7 @@
 #include "application.h"
 
 #include "handler/index.h"
+#include "handler/schema.h"
 
 #include <sys/signal.h>
 
@@ -9,7 +10,8 @@ namespace AdaptiveDB
     Application *Application::m_instance = nullptr;
 
     Application::Application()
-        : m_server(createRef<Server>())
+        : m_server(createRef<Server>()),
+          m_catalogue(createRef<Catalogue>())
     {
         if (!m_instance)
         {
@@ -36,6 +38,7 @@ namespace AdaptiveDB
         Log::info(fmt::format("AdaptiveDB v{}.{}.{}", version.major, version.minor, version.patch));
 
         m_server->get("/", index);
+        m_server->post("/schema", schema);
 
         m_server->run(3000);
 

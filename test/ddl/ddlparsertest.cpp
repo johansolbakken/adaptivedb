@@ -51,20 +51,20 @@ int main()
 
             switch (field.type)
             {
-            case DDLBasicType::Int:
+            case BasicType::Int:
                 type = "Int";
                 break;
-            case DDLBasicType::Float:
+            case BasicType::Float:
 
                 type = "Float";
                 break;
-            case DDLBasicType::Date:
+            case BasicType::Date:
                 type = "Date";
                 break;
-            case DDLBasicType::String:
+            case BasicType::String:
                 type = "String";
                 break;
-            case DDLBasicType::Blob:
+            case BasicType::Blob:
                 type = "Blob";
                 break;
             default:

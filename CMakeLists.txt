@@ -14,7 +14,7 @@ list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/core/entrypoint.cpp")
 add_subdirectory(vendor/json)
 add_subdirectory(vendor/fmt)
 
-set(ADB_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/vendor/json/include" "${CMAKE_CURRENT_SOURCE_DIR}/vendor/fmt/include" CACHE INTERNAL "ADB include directories")
+set(ADB_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/vendor/json/include" "${CMAKE_CURRENT_SOURCE_DIR}/vendor/fmt/include")
 
 add_library(adbcore STATIC ${SOURCES})
 target_include_directories(adbcore PUBLIC ${ADB_INCLUDE_DIRS})

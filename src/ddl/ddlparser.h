@@ -2,21 +2,13 @@
 
 #include "core/base.h"
 #include "ddl/ddllexer.h"
+#include "catalogue/catalogue.h"
 
 #include <vector>
 #include <optional>
 
 namespace AdaptiveDB
 {
-    enum class DDLBasicType
-    {
-        Int,
-        Float,
-        Date,
-        String,
-        Blob
-    };
-
     struct DDLForeignKey
     {
         std::string model;
@@ -25,7 +17,7 @@ namespace AdaptiveDB
 
     struct DDLField
     {
-        DDLBasicType type;
+        BasicType type;
         std::string name;
         bool nullable;
         // bool unique; TODO: Add @unique to DDL

@@ -3,6 +3,8 @@
 #include "core/base.h"
 #include "core/server.h"
 
+#include "catalogue/catalogue.h"
+
 namespace AdaptiveDB {
 class Application {
 public:
@@ -17,6 +19,8 @@ public:
 
 private:
   Ref<Server> m_server;
+  Ref<Catalogue> m_catalogue;
+
   bool m_running = false;
   static Application* m_instance;
 };
