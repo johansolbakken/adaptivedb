@@ -37,6 +37,8 @@ namespace AdaptiveDB
     class Catalogue
     {
     public:
+        Catalogue();
+        ~Catalogue();
         void addTable(const CatalogueTable &table);
         const std::vector<CatalogueTable> &tables() const { return m_tables; }
 
