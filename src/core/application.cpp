@@ -2,6 +2,7 @@
 
 #include "handler/index.h"
 #include "handler/schema.h"
+#include "handler/catalogue.h"
 
 #include <sys/signal.h>
 
@@ -39,6 +40,8 @@ namespace AdaptiveDB
 
         m_server->get("/", index);
         m_server->post("/schema", schema);
+        m_server->get("/catalogue", getAllTables);
+        m_server->post("/catalogue", createTableBySchema);
 
         m_server->run(3000);
 

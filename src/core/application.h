@@ -17,6 +17,9 @@ public:
 
   static Application& instance() { return *m_instance; }
 
+  Ref<Server> server() { return m_server; }
+  Ref<Catalogue> catalogue() { return m_catalogue; }
+
 private:
   Ref<Server> m_server;
   Ref<Catalogue> m_catalogue;

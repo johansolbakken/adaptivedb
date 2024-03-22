@@ -32,6 +32,7 @@ namespace AdaptiveDB
             return;
         }
 
+        lexer = DDLLexer(body["schema"]);
         DDLParser parser(lexer);
         auto models = parser.parseModels();
         
@@ -63,6 +64,8 @@ namespace AdaptiveDB
             res["errors"] = errors;
             return;
         }
+
+
 
         res["status"] = "OK";
         res["message"] = "No errors found";
