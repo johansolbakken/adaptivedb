@@ -1,6 +1,5 @@
 #include "ddl/ddllexer.h"
-
-#include <iostream>
+#include "core/base.h"
 
 using namespace AdaptiveDB;
 
@@ -61,9 +60,21 @@ int main()
 
     DDLLexer lexer(source);
     auto tokens = lexer.tokenize();
+    
+    if (!lexer.errors().empty())
+    {
+        for (const auto &error : lexer.errors())
+        {
+            Log::error(error);
+        }
+        return 1;
+    }
+    
     for (const auto &token : tokens)
     {
         LineColumn lc = positionToLineColumn(source, token.position);
-        std::cout << "Token: " << tokenTypeToString(token.type) << " Value: " << token.value << " Line: " << lc.line << " Column: " << lc.column << std::endl;
+        Log::info(fmt::format("Token: {} Value: {} Line: {} Column: {}", tokenTypeToString(token.type), token.value, lc.line, lc.column));
     }
+    
+    Log::info("No errors found");
 }

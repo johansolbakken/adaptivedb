@@ -116,7 +116,7 @@ namespace AdaptiveDB
             {
                 // Handle unexpected character or implement additional logic for other characters
                 LineColumn lc = positionToLineColumn(m_source, m_position);
-                Log::error(fmt::format("Unexpected character '{}' at line {}, column {}", ch, lc.line, lc.column));
+                m_errors.push_back(fmt::format("Unexpected character '{}' at line {}, column {}", ch, lc.line, lc.column));
                 ++m_position;
             }
         }

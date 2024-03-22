@@ -35,10 +35,12 @@ namespace AdaptiveDB
         ~DDLLexer();
 
         std::vector<DDLToken> tokenize();
+        std::vector<std::string> errors() const { return m_errors; }
 
     private:
         std::string m_source;
         int m_position;
+        std::vector<std::string> m_errors;
     };
 
     struct LineColumn
