@@ -17,83 +17,85 @@ ERROR TYPES:
 - [ ] Primary key cannot be nullable
 */
 
-#define BIND_FN(fn) std::bind(&DDLSemanticChecker::fn, this, std::placeholders::_1)
+#define BIND_FN(fn) [this](auto && PH1) { fn(std::forward<decltype(PH1)>(PH1)); }
 
 namespace AdaptiveDB
 {
-    DDLSemanticChecker::DDLSemanticChecker()
-    {
-    }
+	DDLSemanticChecker::DDLSemanticChecker()
+	= default;
 
-    DDLSemanticChecker::~DDLSemanticChecker()
-    {
-    }
+	DDLSemanticChecker::~DDLSemanticChecker()
+	= default;
 
-    void DDLSemanticChecker::checkModels(const std::vector<DDLModel> &models)
-    {
-        m_models = models;
-        std::vector<std::function<void(const DDLModel &)>> checks = {
-            BIND_FN(fieldReferencedInForeignKeyMustExistInModel),
-            BIND_FN(modelMustHavePrimaryKey),
-        };
+	void DDLSemanticChecker::checkModels(const std::vector<DDLModel>& models)
+	{
+		m_models = models;
+		std::vector<std::function<void(const DDLModel&)>> checks = {
+				BIND_FN(fieldReferencedInForeignKeyMustExistInModel),
+				BIND_FN(modelMustHavePrimaryKey),
+		};
 
-        for (const auto &model : models)
-        {
-            for (const auto &check : checks)
-            {
-                check(model);
-            }
-        }
-    }
+		for (const auto& model: models)
+		{
+			for (const auto& check: checks)
+			{
+				check(model);
+			}
+		}
+	}
 
-    void DDLSemanticChecker::fieldReferencedInForeignKeyMustExistInModel(const DDLModel &model)
-    {
-        for (const auto &field : model.fields)
-        {
-            // Field that is referenced in a foreign key must exist in the model
-            if (field.foreignKey.has_value())
-            {
-                bool found = false;
-                for (const auto &m : m_models)
-                {
-                    if (m.name == field.foreignKey.value().model)
-                    {
-                        found = true;
-                        bool fieldFound = false;
-                        for (const auto &f : m.fields)
-                        {
-                            if (f.name == field.foreignKey.value().field)
-                            {
-                                fieldFound = true;
-                            }
-                        }
-                        if (!fieldFound)
-                        {
-                            m_errors.push_back(fmt::format("Field {} not found in model {}", field.foreignKey.value().field, field.foreignKey.value().model));
-                        }
-                    }
-                }
-                if (!found)
-                {
-                    m_errors.push_back(fmt::format("Model {} not found referenced by {}.{}", field.foreignKey.value().model , model.name, field.name));
-                }
-            }
-        }
-    }
+	void DDLSemanticChecker::fieldReferencedInForeignKeyMustExistInModel(const DDLModel& model)
+	{
+		for (const auto& field: model.fields)
+		{
+			// Field that is referenced in a foreign key must exist in the model
+			if (field.foreignKey.has_value())
+			{
+				bool found = false;
+				for (const auto& m: m_models)
+				{
+					if (m.name == field.foreignKey.value().model)
+					{
+						found = true;
+						bool fieldFound = false;
+						for (const auto& f: m.fields)
+						{
+							if (f.name == field.foreignKey.value().field)
+							{
+								fieldFound = true;
+							}
+						}
+						if (!fieldFound)
+						{
+							m_errors.push_back(
+									fmt::format("Field {} not found in model {}", field.foreignKey.value().field,
+											field.foreignKey.value().model));
+						}
+					}
+				}
+				if (!found)
+				{
+					m_errors.push_back(
+							fmt::format("Model {} not found referenced by {}.{}", field.foreignKey.value().model,
+									model.name, field.name));
+				}
+			}
+		}
+	}
 
-    void DDLSemanticChecker::modelMustHavePrimaryKey(const DDLModel &model)
-    {
-        bool found = false;
-        for (const auto &field : model.fields)
-        {
-            if (field.primary)
-            {
-                found = true;
-            }
-        }
-        if (!found)
-        {
-            m_errors.push_back(fmt::format("Model {} must have a primary key", model.name));
-        }
-    }
+	void DDLSemanticChecker::modelMustHavePrimaryKey(const DDLModel& model)
+	{
+		bool found = false;
+		for (const auto& field: model.fields)
+		{
+			if (field.primary)
+			{
+				found = true;
+			}
+		}
+		if (!found)
+		{
+			m_errors.push_back(fmt::format("Model {} must have a primary key", model.name));
+		}
+	}
 } // namespace AdaptiveDB

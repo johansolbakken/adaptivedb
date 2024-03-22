@@ -12,7 +12,7 @@ namespace AdaptiveDB
 
         void checkModels(const std::vector<DDLModel> &models);
 
-        const std::vector<std::string> &errors() const { return m_errors; }
+        [[nodiscard]] const std::vector<std::string> &errors() const { return m_errors; }
 
     private: // Checks
         void fieldReferencedInForeignKeyMustExistInModel(const DDLModel &model);
