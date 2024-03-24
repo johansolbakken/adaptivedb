@@ -1,4 +1,4 @@
-#include "queryprocessing/ddllexer.h"
+#include "queryprocessing/ddl/ddllexer.h"
 
 #include "core/base.h"
 

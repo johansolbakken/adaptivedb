@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/base.h"
-#include "queryprocessing/ddllexer.h"
+#include "queryprocessing/ddl/ddllexer.h"
 #include "catalogue/catalogue.h"
 
 #include <vector>

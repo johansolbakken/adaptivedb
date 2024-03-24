@@ -2,7 +2,7 @@
 
 #include "core/base.h"
 
-#include "queryprocessing/ddlsemantic.h"
+#include "queryprocessing/ddl/ddlsemantic.h"
 
 namespace AdaptiveDB
 {

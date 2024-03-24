@@ -1,4 +1,4 @@
-#include "queryprocessing/ddlsemantic.h"
+#include "queryprocessing/ddl/ddlsemantic.h"
 #include "core/base.h"
 
 using namespace AdaptiveDB;

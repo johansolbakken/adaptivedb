@@ -4,7 +4,7 @@
 #include "core/application.h"
 #include "catalogue/catalogue.h"
 
-#include "queryprocessing/ddlsemantic.h"
+#include "queryprocessing/ddl/ddlsemantic.h"
 
 namespace AdaptiveDB
 {
