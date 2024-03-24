@@ -1,4 +1,4 @@
-#include "ddl/ddlparser.h"
+#include "queryprocessing/ddlparser.h"
 
 using namespace AdaptiveDB;
 

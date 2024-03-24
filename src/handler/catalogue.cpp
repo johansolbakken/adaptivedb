@@ -3,7 +3,8 @@
 #include "catalogue/basictype.h"
 #include "core/application.h"
 #include "catalogue/catalogue.h"
-#include "ddl/ddlsemantic.h"
+
+#include "queryprocessing/ddlsemantic.h"
 
 namespace AdaptiveDB
 {

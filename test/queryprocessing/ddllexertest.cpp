@@ -1,4 +1,5 @@
-#include "ddl/ddllexer.h"
+#include "queryprocessing/ddllexer.h"
+
 #include "core/base.h"
 
 using namespace AdaptiveDB;

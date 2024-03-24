@@ -1,8 +1,8 @@
 #include "schema.h"
 
 #include "core/base.h"
-#include "ddl/ddllexer.h"
-#include "ddl/ddlsemantic.h"
+
+#include "queryprocessing/ddlsemantic.h"
 
 namespace AdaptiveDB
 {

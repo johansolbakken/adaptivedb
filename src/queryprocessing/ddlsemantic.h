@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ddl/ddlparser.h"
+#include "queryprocessing/ddlparser.h"
 
 namespace AdaptiveDB
 {
