@@ -1,6 +1,5 @@
 use std::thread::current;
 
-
 #[derive(Debug, PartialEq)]
 enum DDLTokenType {
     Model,
@@ -29,7 +28,11 @@ struct DDLLexer {
 
 impl DDLLexer {
     fn new(input: String) -> Self {
-        Self { input, position: 0, errors: Vec::new()}
+        Self {
+            input,
+            position: 0,
+            errors: Vec::new(),
+        }
     }
 
     fn next_token(&mut self) -> Option<DDLToken> {
@@ -42,7 +45,7 @@ impl DDLLexer {
             self.position += 1;
             return self.next_token();
         }
-        
+
         if current_char.is_alphabetic() {
             let mut value = String::new();
             while current_char.is_alphabetic() {
@@ -114,8 +117,9 @@ impl DDLLexer {
                 position: self.position,
             });
             self.position += 1;
-        } else {    
-            self.errors.push(format!("Invalid character: {}", current_char));
+        } else {
+            self.errors
+                .push(format!("Invalid character: {}", current_char));
             self.position += 1;
         }
 
