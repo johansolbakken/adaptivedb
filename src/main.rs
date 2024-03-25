@@ -14,6 +14,8 @@ use hyper::{Method, StatusCode};
 use tracing::{error, info, warn, Level};
 use tracing_subscriber::FmtSubscriber;
 
+mod queryprocessing;
+
 async fn echo(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
