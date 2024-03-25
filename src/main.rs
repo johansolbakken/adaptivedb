@@ -11,6 +11,8 @@ use tokio::net::TcpListener;
 use http_body_util::{combinators::BoxBody, BodyExt};
 use hyper::body::Frame;
 use hyper::{Method, StatusCode};
+use tracing::{error, info, warn, Level};
+use tracing_subscriber::FmtSubscriber;
 
 async fn echo(
     req: Request<hyper::body::Incoming>,
@@ -74,8 +76,31 @@ fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
         .boxed()
 }
 
+fn perform_operation() {
+    info!("performing operation");
+
+    // Simulate a warning
+    warn!("this is a warning, something might be wrong");
+
+    // Simulate an error
+    error!("an error occurred!");
+}
+
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::TRACE)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber)
+        .expect("setting default subscriber failed");
+
+    // Your application logic here
+    info!("Tracing is set up and ready to go!");
+
+    perform_operation();
+
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
     // We create a TcpListener and bind it to 127.0.0.1:3000
