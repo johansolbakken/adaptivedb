@@ -1,19 +1,19 @@
-use std::net::SocketAddr;
-
-use catalogue::Catalogue;
 use http_body_util::Full;
+use http_body_util::{combinators::BoxBody, BodyExt};
+
 use hyper::body::Bytes;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
+use hyper::StatusCode;
 use hyper::{Request, Response};
 use hyper_util::rt::TokioIo;
+
 use once_cell::sync::Lazy;
+use std::net::SocketAddr;
+
 use tokio::net::TcpListener;
-
-use http_body_util::{combinators::BoxBody, BodyExt};
-
-use hyper::StatusCode;
 use tokio::sync::Mutex;
+
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
@@ -26,6 +26,9 @@ async fn handler(
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
     if req.uri().path().starts_with("/catalogue") {
         return handler::catalogue::catalogue_handler(req).await;
+    }
+    if req.uri().path().starts_with("/data") {
+        return handler::data::data_handler(req).await;
     }
 
     let mut not_found = Response::new(empty());
@@ -46,12 +49,13 @@ fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
         .boxed()
 }
 
-static CATALOGUE: Lazy<Mutex<Catalogue>> = Lazy::new(|| {
-    let catalogue = Catalogue::load().unwrap_or_else(|_| Catalogue::new(Vec::new()));
+static CATALOGUE: Lazy<Mutex<catalogue::Catalogue>> = Lazy::new(|| {
+    let catalogue =
+        catalogue::Catalogue::load().unwrap_or_else(|_| catalogue::Catalogue::new(Vec::new()));
     Mutex::new(catalogue)
 });
 
-pub fn get_catalogue() -> &'static Mutex<Catalogue> {
+pub fn get_catalogue() -> &'static Mutex<catalogue::Catalogue> {
     &CATALOGUE
 }
 

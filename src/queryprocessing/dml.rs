@@ -146,7 +146,7 @@ impl DMLLexer {
     }
 }
 
-enum DMLStatement {
+pub enum DMLStatement {
     Insert(DMLInsertStatement),
     Update,
     Delete,
@@ -154,16 +154,17 @@ enum DMLStatement {
     Commit,
 }
 
-struct DMLInsertStatement {
-    table_name: String,
-    columns: Vec<String>,
-    values: Vec<String>,
+pub struct DMLInsertStatement {
+    pub table_name: String,
+    pub columns: Vec<String>,
+    pub values: Vec<String>,
 }
 
 struct DMLParser {
     lexer: DMLLexer,
     current_token: Option<DMLToken>,
     peek_token: Option<DMLToken>,
+    errors: Vec<String>,
 }
 
 impl DMLParser {
@@ -175,6 +176,7 @@ impl DMLParser {
             lexer,
             current_token,
             peek_token,
+            errors: Vec::new(),
         }
     }
 
@@ -312,6 +314,11 @@ impl DMLParser {
             values,
         })
     }
+}
+
+pub fn parse(query: &str) -> Option<DMLStatement> {
+    let mut parser = DMLParser::new(query.to_string());
+    parser.parse()
 }
 
 #[cfg(test)]
