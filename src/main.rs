@@ -1,16 +1,19 @@
 use std::net::SocketAddr;
 
+use catalogue::Catalogue;
 use http_body_util::Full;
 use hyper::body::Bytes;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Request, Response};
 use hyper_util::rt::TokioIo;
+use once_cell::sync::Lazy;
 use tokio::net::TcpListener;
 
 use http_body_util::{combinators::BoxBody, BodyExt};
 
 use hyper::StatusCode;
+use tokio::sync::Mutex;
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
@@ -41,6 +44,15 @@ fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
     Full::new(chunk.into())
         .map_err(|never| match never {})
         .boxed()
+}
+
+static CATALOGUE: Lazy<Mutex<Catalogue>> = Lazy::new(|| {
+    let catalogue = Catalogue::load().unwrap_or_else(|_| Catalogue::new(Vec::new()));
+    Mutex::new(catalogue)
+});
+
+pub fn get_catalogue() -> &'static Mutex<Catalogue> {
+    &CATALOGUE
 }
 
 #[tokio::main]
