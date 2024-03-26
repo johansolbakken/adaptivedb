@@ -9,25 +9,20 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 Before you begin, ensure you have the following tools installed on your system:
-- CMake (minimum version 3.5)
-- Ninja Build System
-- A C++ compiler supporting at least C++23
+- Rust
 
 ### Building
 
 To build AdaptiveDB, follow these steps:
 
 ```bash
-mkdir build 
-cd build
-cmake .. -GNinja
-ninja
+cargo build
 ```
 
 This will compile all the necessary files and produce an executable. To run AdaptiveDB, execute:
 
 ```bash
-./AdaptiveDB
+cargo run
 ```
 
 ## Building with Docker
@@ -38,11 +33,9 @@ docker run -p 3000:3000 adaptivedb
 
 ## Running the Tests
 
-Todo
-
-## Deployment
-
-Todo
+```bash
+cargo test
+```
 
 ## Versioning
 
