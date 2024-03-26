@@ -1,6 +1,5 @@
+use tracing::info;
 
-// insert into Employee (EmployeeID, FirstName, LastName, DepartmentID, JobTitle, HireDate) values ('1', 'John', 'Doe', 1, 'Manager', '2021-01-01');
-// commit;
 
 #[derive(Debug, PartialEq, Clone)]
 enum DMLTokenType {
@@ -37,10 +36,7 @@ struct DMLLexer {
 
 impl DMLLexer {
     fn new(input: String) -> DMLLexer {
-        DMLLexer {
-            input,
-            position: 0,
-        }
+        DMLLexer { input, position: 0 }
     }
 
     fn next_token(&mut self) -> Option<DMLToken> {
@@ -132,10 +128,11 @@ impl DMLLexer {
                         value.push(c);
                         self.position += 1;
                     }
-                    let token_type = match DML_KEYWORDS.iter().find(|(keyword, _)| *keyword== value) {
-                        Some((_, token_type)) => (*token_type).clone(),
-                        None => DMLTokenType::Identifier(value),
-                    };
+                    let token_type =
+                        match DML_KEYWORDS.iter().find(|(keyword, _)| *keyword == value) {
+                            Some((_, token_type)) => (*token_type).clone(),
+                            None => DMLTokenType::Identifier(value),
+                        };
                     token = Some(DMLToken {
                         token_type,
                         position: self.position,
@@ -149,7 +146,173 @@ impl DMLLexer {
     }
 }
 
+enum DMLStatement {
+    Insert(DMLInsertStatement),
+    Update,
+    Delete,
+    Select,
+    Commit,
+}
 
+struct DMLInsertStatement {
+    table_name: String,
+    columns: Vec<String>,
+    values: Vec<String>,
+}
+
+struct DMLParser {
+    lexer: DMLLexer,
+    current_token: Option<DMLToken>,
+    peek_token: Option<DMLToken>,
+}
+
+impl DMLParser {
+    fn new(input: String) -> DMLParser {
+        let mut lexer = DMLLexer::new(input);
+        let current_token = lexer.next_token();
+        let peek_token = lexer.next_token();
+        DMLParser {
+            lexer,
+            current_token,
+            peek_token,
+        }
+    }
+
+    fn next_token(&mut self) {
+        self.current_token = self.peek_token.clone();
+        self.peek_token = self.lexer.next_token();
+    }
+
+    fn parse(&mut self) -> Option<DMLStatement> {
+        match self.current_token.clone() {
+            Some(token) => {
+                match token.token_type {
+                    DMLTokenType::Insert => match self.parse_insert_statement() {
+                        Some(insert_statement) => {
+                            return Some(DMLStatement::Insert(insert_statement));
+                        }
+                        None => {}
+                    },
+                    DMLTokenType::Commit => {
+                        self.next_token();
+                        if self.current_token.clone().unwrap().token_type == DMLTokenType::SemiColon
+                        {
+                            self.next_token();
+                            return Some(DMLStatement::Commit);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            None => {}
+        }
+
+        None
+    }
+
+    fn parse_insert_statement(&mut self) -> Option<DMLInsertStatement> {
+        let mut table_name = String::new();
+        let mut columns = Vec::new();
+        let mut values = Vec::new();
+
+        // insert
+        self.next_token();
+
+        // into
+        if self.current_token.clone().unwrap().token_type != DMLTokenType::Into {
+            return None;
+        }
+        self.next_token();
+
+        // table name
+        match self.current_token.clone() {
+            Some(token) => match token.token_type {
+                DMLTokenType::Identifier(value) => {
+                    table_name = value;
+                }
+                _ => {}
+            },
+            None => {}
+        }
+
+        // columns
+        self.next_token();
+
+        match self.current_token.clone() {
+            Some(token) => match token.token_type {
+                DMLTokenType::OpenParenthesis => {
+                    self.next_token();
+                    while let Some(token) = self.current_token.clone() {
+                        match token.token_type {
+                            DMLTokenType::Identifier(value) => {
+                                columns.push(value);
+                            }
+                            DMLTokenType::Comma => {}
+                            DMLTokenType::CloseParenthesis => {
+                                break;
+                            }
+                            _ => {}
+                        }
+                        self.next_token();
+                    }
+                }
+                _ => {}
+            },
+            None => {}
+        }
+
+        // values
+        self.next_token();
+
+        match self.current_token.clone() {
+            Some(token) => match token.token_type {
+                DMLTokenType::Values => {
+                    self.next_token();
+                    match self.current_token.clone() {
+                        Some(token) => match token.token_type {
+                            DMLTokenType::OpenParenthesis => {
+                                self.next_token();
+                                while let Some(token) = self.current_token.clone() {
+                                    match token.token_type {
+                                        DMLTokenType::String(value) => {
+                                            values.push(value);
+                                        }
+                                        DMLTokenType::Comma => {}
+                                        DMLTokenType::CloseParenthesis => {
+                                            break;
+                                        }
+                                        _ => {}
+                                    }
+                                    self.next_token();
+                                }
+                            }
+                            _ => {}
+                        },
+                        None => {}
+                    }
+                }
+                _ => {}
+            },
+            None => {}
+        }
+
+        // )
+        self.next_token();
+
+        // ;
+        if self.current_token.clone().unwrap().token_type != DMLTokenType::SemiColon {
+            return None;
+        }
+
+        self.next_token();
+
+        Some(DMLInsertStatement {
+            table_name,
+            columns,
+            values,
+        })
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -186,6 +349,36 @@ mod tests {
         for token in correct_sequence.iter() {
             let next_token = lexer.next_token().unwrap();
             assert_eq!(next_token.token_type, *token);
+        }
+    }
+
+    #[test]
+    fn test_dml_parser_insert_statement() {
+        let input = "insert into Employee (EmployeeID, FirstName, LastName) values ('1', 'John', 'Doe'); commit;";
+        let mut parser = super::DMLParser::new(input.to_string());
+        let statement = parser.parse();
+        match statement {
+            Some(super::DMLStatement::Insert(insert_statement)) => {
+                assert_eq!(insert_statement.table_name, "Employee");
+                assert_eq!(
+                    insert_statement.columns,
+                    vec!["EmployeeID", "FirstName", "LastName"]
+                );
+                assert_eq!(insert_statement.values, vec!["1", "John", "Doe"]);
+            }
+            _ => {
+                assert!(false);
+            }
+        }
+
+        let statement = parser.parse();
+        match statement {
+            Some(super::DMLStatement::Commit) => {
+                assert!(true);
+            }
+            _ => {
+                assert!(false);
+            }
         }
     }
 }
