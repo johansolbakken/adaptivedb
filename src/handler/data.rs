@@ -22,6 +22,11 @@ struct PostData {
     query: String,
 }
 
+#[derive(Debug, serde::Serialize)]
+struct PostDataErrorResponse {
+    errors: Vec<String>,
+}
+
 async fn post_data(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
@@ -46,6 +51,14 @@ async fn post_data(
     }
 
     let statement = statement.unwrap();
+    let errors = queryprocessing::dml::analyze(statement.clone()).await;
+    if !errors.is_empty() {
+        return Ok(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(full(serde_json::to_string(&PostDataErrorResponse { errors }).unwrap()))
+            .unwrap());
+    }
+
     let result = queryprocessing::execute(statement);
     let result = serde_json::to_string(&result).unwrap();
 

@@ -27,7 +27,7 @@ fn handle_insert(insert_statement: dml::DMLInsertStatement) -> serde_json::Value
         );
     }
 
-    let mut data = std::fs::read_to_string(&global_file_path()).unwrap();
+    let data = std::fs::read_to_string(&global_file_path()).unwrap();
     let mut data: serde_json::Value = serde_json::from_str(&data).unwrap();
     let table_name = insert_statement.table_name;
     let table_index = data

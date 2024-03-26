@@ -1,6 +1,5 @@
 use tracing::info;
 
-
 #[derive(Debug, PartialEq, Clone)]
 enum DMLTokenType {
     Insert,
@@ -146,6 +145,7 @@ impl DMLLexer {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum DMLStatement {
     Insert(DMLInsertStatement),
     Update,
@@ -154,6 +154,7 @@ pub enum DMLStatement {
     Commit,
 }
 
+#[derive(Debug, Clone)]
 pub struct DMLInsertStatement {
     pub table_name: String,
     pub columns: Vec<String>,
@@ -187,25 +188,22 @@ impl DMLParser {
 
     fn parse(&mut self) -> Option<DMLStatement> {
         match self.current_token.clone() {
-            Some(token) => {
-                match token.token_type {
-                    DMLTokenType::Insert => match self.parse_insert_statement() {
-                        Some(insert_statement) => {
-                            return Some(DMLStatement::Insert(insert_statement));
-                        }
-                        None => {}
-                    },
-                    DMLTokenType::Commit => {
-                        self.next_token();
-                        if self.current_token.clone().unwrap().token_type == DMLTokenType::SemiColon
-                        {
-                            self.next_token();
-                            return Some(DMLStatement::Commit);
-                        }
+            Some(token) => match token.token_type {
+                DMLTokenType::Insert => match self.parse_insert_statement() {
+                    Some(insert_statement) => {
+                        return Some(DMLStatement::Insert(insert_statement));
                     }
-                    _ => {}
+                    None => {}
+                },
+                DMLTokenType::Commit => {
+                    self.next_token();
+                    if self.current_token.clone().unwrap().token_type == DMLTokenType::SemiColon {
+                        self.next_token();
+                        return Some(DMLStatement::Commit);
+                    }
                 }
-            }
+                _ => {}
+            },
             None => {}
         }
 
@@ -332,6 +330,109 @@ pub fn parse(query: &str) -> Option<DMLStatement> {
 // - Check if the foreign key is unique
 // - Check if the foreign key is of the correct type
 // - Check if the foreign key is not the primary key
+
+struct DMLAnalyzer {
+    statements: Vec<DMLStatement>,
+}
+
+impl DMLAnalyzer {
+    fn new(statements: Vec<DMLStatement>) -> DMLAnalyzer {
+        DMLAnalyzer { statements }
+    }
+
+    async fn analyze(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        errors.extend(self.check_table_exists().await);
+        errors.extend(self.check_columns_exist().await);
+        errors
+    }
+
+    async fn check_table_exists(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        for statement in self.statements.iter() {
+            match statement {
+                DMLStatement::Insert(insert_statement) => {
+                    let catalogue = crate::get_catalogue().lock().await;
+                    if !catalogue.table_exists(&insert_statement.table_name) {
+                        errors.push(format!(
+                            "Table {} does not exist",
+                            insert_statement.table_name
+                        ));
+                    }
+                }   
+                _ => {}
+            }
+        }
+        errors
+    }
+
+    async fn check_columns_exist(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        for statement in self.statements.iter() {
+            match statement {
+                DMLStatement::Insert(insert_statement) => {
+                    let catalogue = crate::get_catalogue().lock().await;
+                    let table = catalogue.get_table(&insert_statement.table_name).unwrap();
+                    for column in insert_statement.columns.iter() {
+                        if !table.column_exists(column) {
+                            errors.push(format!(
+                                "Column {} does not exist in table {}",
+                                column, insert_statement.table_name
+                            ));
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        errors
+    }
+
+    // TODO: Implement check if values are of the correct type
+    async fn check_values_correct_type(&self) -> Vec<String> {
+        vec![]
+    }
+
+    // TODO: Implement check if values are not null if the column is not nullable
+    async fn check_values_not_null(&self) -> Vec<String> {
+        vec![]
+    }
+
+    // TODO: Implement check if the primary key is unique
+    async fn check_primary_key_unique(&self) -> Vec<String> {
+        vec![]
+    }
+
+    // TODO: Implement check if the foreign key exists
+    fn check_foreign_key_exists(&self) -> Vec<String> {
+        vec![]
+    }
+
+    // TODO: Implement check if the foreign key is not null
+    fn check_foreign_key_not_null(&self) -> Vec<String> {
+        vec![]
+    }
+
+    // TODO: Implement check if the foreign key is unique
+    fn check_foreign_key_unique(&self) -> Vec<String> {
+        vec![]
+    }
+
+    // TODO: Implement check if the foreign key is of the correct type
+    fn check_foreign_key_correct_type(&self) -> Vec<String> {
+        vec![]
+    }
+
+    // TODO: Implement check if the foreign key is not the primary key
+    fn check_foreign_key_not_primary_key(&self) -> Vec<String> {
+        vec![]
+    }
+}
+
+pub async fn analyze(statement: DMLStatement) -> Vec<String> {
+    let analyzer = DMLAnalyzer::new(vec![statement]);
+    analyzer.analyze().await
+}
 
 #[cfg(test)]
 mod tests {

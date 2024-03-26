@@ -35,6 +35,14 @@ impl Table {
             primary_key,
         }
     }
+
+    pub fn get_column(&self, column_name: &str) -> Option<&Column> {
+        self.columns.iter().find(|column| column.name == column_name)
+    }
+
+    pub fn column_exists(&self, column_name: &str) -> bool {
+        self.columns.iter().any(|column| column.name == column_name)
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -75,5 +83,9 @@ impl Catalogue {
 
     pub fn add_table(&mut self, table: Table) {
         self.tables.push(table);
+    }
+
+    pub fn get_table(&self, table_name: &str) -> Option<&Table> {
+        self.tables.iter().find(|table| table.name == table_name)
     }
 }
