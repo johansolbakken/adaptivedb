@@ -1,3 +1,5 @@
+use crate::catalogue::basic_types::BasicType;
+
 #[derive(Debug, PartialEq)]
 enum DDLTokenType {
     Model,
@@ -123,18 +125,9 @@ struct Model {
 }
 
 #[derive(Debug, PartialEq)]
-enum FieldType {
-    Int,
-    Float,
-    String,
-    Date,
-    Blob,
-}
-
-#[derive(Debug, PartialEq)]
 struct Field {
     name: String,
-    field_type: FieldType,
+    field_type: BasicType,
     is_nullable: bool,
     is_primary_key: bool,
     is_foreign_key: bool,
@@ -212,7 +205,7 @@ impl DDLParser {
         }
         let mut field = Field {
             name: String::new(),
-            field_type: FieldType::Int,
+            field_type: BasicType::Int,
             is_nullable: false,
             is_primary_key: false,
             is_foreign_key: false,
@@ -231,13 +224,14 @@ impl DDLParser {
         token = &self.tokens[self.position];
         match &token.token_type {
             DDLTokenType::Type(t) => {
-                field.field_type = match &t[..] {
-                    "Int" => FieldType::Int,
-                    "Float" => FieldType::Float,
-                    "String" => FieldType::String,
-                    "Date" => FieldType::Date,
-                    _ => FieldType::Int,
+                let field_type = match BasicType::from_str(&t) {
+                    Some(t) => t,
+                    None => {
+                        self.errors.push(format!("Invalid field type: {}", t));
+                        return None;
+                    }
                 };
+                field.field_type = field_type;
             }
             _ => return None,
         }
@@ -290,6 +284,19 @@ impl DDLParser {
         Some(field)
     }
 }
+
+/*
+ERROR TYPES:
+- Field referenced in foreign key must exist in model
+- Field referenced in foreign key must have same type as primary key
+- Field referenced in foreign key must be primary key
+- Model referenced in foreign key must exist
+- Every model must have a primary key
+- No duplicate model names
+- No duplicate field names in model
+- Exactly one primary key in model
+- Primary key cannot be nullable
+*/
 
 struct DDLAnalyzer {
     models: Vec<Model>,
@@ -408,7 +415,7 @@ mod tests {
             fields: vec![
                 Field {
                     name: "EmployeeID".to_string(),
-                    field_type: FieldType::String,
+                    field_type: BasicType::String,
                     is_nullable: false,
                     is_primary_key: true,
                     is_foreign_key: false,
@@ -416,7 +423,7 @@ mod tests {
                 },
                 Field {
                     name: "FirstName".to_string(),
-                    field_type: FieldType::String,
+                    field_type: BasicType::String,
                     is_nullable: false,
                     is_primary_key: false,
                     is_foreign_key: false,
@@ -424,7 +431,7 @@ mod tests {
                 },
                 Field {
                     name: "LastName".to_string(),
-                    field_type: FieldType::String,
+                    field_type: BasicType::String,
                     is_nullable: false,
                     is_primary_key: false,
                     is_foreign_key: false,
@@ -432,7 +439,7 @@ mod tests {
                 },
                 Field {
                     name: "DepartmentID".to_string(),
-                    field_type: FieldType::Int,
+                    field_type: BasicType::Int,
                     is_nullable: true,
                     is_primary_key: false,
                     is_foreign_key: false,
@@ -440,7 +447,7 @@ mod tests {
                 },
                 Field {
                     name: "JobTitle".to_string(),
-                    field_type: FieldType::String,
+                    field_type: BasicType::String,
                     is_nullable: true,
                     is_primary_key: false,
                     is_foreign_key: false,
@@ -448,7 +455,7 @@ mod tests {
                 },
                 Field {
                     name: "HireDate".to_string(),
-                    field_type: FieldType::Date,
+                    field_type: BasicType::Date,
                     is_nullable: false,
                     is_primary_key: false,
                     is_foreign_key: false,

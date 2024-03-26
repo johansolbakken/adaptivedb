@@ -15,6 +15,7 @@ use tracing::{error, info, warn, Level};
 use tracing_subscriber::FmtSubscriber;
 
 mod queryprocessing;
+mod catalogue;
 
 async fn echo(
     req: Request<hyper::body::Incoming>,
