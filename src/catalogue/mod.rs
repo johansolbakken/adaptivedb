@@ -47,17 +47,28 @@ impl Catalogue {
         Catalogue { tables }
     }
 
-    pub fn save(&self) -> Result<(), std::io::Error> {
-        let mut file = std::fs::File::create("catalogue.json")?;
+    fn save(&self) -> Result<(), std::io::Error> {
+        let mut file = std::fs::File::create(Self::catalogue_file())?;
         let json = serde_json::to_string(self)?;
         file.write_all(json.as_bytes())?;
+        println!("Catalogue saved to {:?}", Self::catalogue_file());
         Ok(())
     }
 
     pub fn load() -> Result<Catalogue, std::io::Error> {
-        let file = std::fs::File::open("catalogue.json")?;
+        let file = std::fs::File::open(Self::catalogue_file())?;
         let reader = std::io::BufReader::new(file);
         let catalogue = serde_json::from_reader(reader)?;
         Ok(catalogue)
+    }
+
+    fn catalogue_file() -> std::path::PathBuf {
+        std::env::temp_dir().join("/adaptivedb/catalogue.json")
+    }
+}
+
+impl Drop for Catalogue {
+    fn drop(&mut self) {
+        self.save().unwrap();
     }
 }
