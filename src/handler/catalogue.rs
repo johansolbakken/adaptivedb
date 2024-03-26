@@ -1,7 +1,7 @@
 use http_body_util::{combinators::BoxBody, BodyExt};
 use hyper::{body::Bytes, Method, Request, Response, StatusCode};
 
-use crate::{empty, full};
+use crate::{catalogue, empty, full, queryprocessing};
 
 pub async fn catalogue_handler(
     req: Request<hyper::body::Incoming>,
@@ -17,11 +17,81 @@ pub async fn catalogue_handler(
     }
 }
 
+#[derive(Debug, serde::Deserialize)]
+struct PostTable {
+    schema: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct PostTableErrorResponse {
+    errors: Vec<String>,
+}
+
 async fn post_catalogue(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
     let body = req.into_body().collect().await?.to_bytes();
-    let body = String::from_utf8_lossy(&body).to_string();
-    tracing::info!("Received body: {}", body);
-    Ok(Response::new(full("You've hit the POST /catalogue route!")))
+    let body_json = serde_json::from_slice::<PostTable>(&body);
+    if body_json.is_err() {
+        return Ok(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(full(body_json.as_ref().unwrap_err().to_string()))
+            .unwrap());
+    }
+
+    let body_json = body_json.unwrap();
+    let schema = body_json.schema;
+
+    let models = queryprocessing::ddl::parse(schema);
+    let errors = queryprocessing::ddl::analyze(&models);
+    if !errors.is_empty() {
+        return Ok(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(full(
+                serde_json::to_string(&PostTableErrorResponse { errors }).unwrap(),
+            ))
+            .unwrap());
+    }
+
+    let mut catalogue = crate::get_catalogue().lock().await;
+    for model in models.iter() {
+        if catalogue.table_exists(&model.name) {
+            return Ok(Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(full(format!(
+                    "Aborted. Table {} already exists",
+                    model.name
+                )))
+                .unwrap());
+        }
+    }
+
+    for model in models.iter() {
+        let columns = model
+            .fields
+            .iter()
+            .map(|field| {
+                catalogue::Column::new(
+                    field.name.clone(),
+                    field.field_type.clone(),
+                    field.is_nullable,
+                )
+            })
+            .collect();
+        let primary_key_index = model
+            .fields
+            .iter()
+            .position(|field| field.is_primary_key)
+            .expect("Analyzing should have caught this error");
+        let table = catalogue::Table::new(model.name.clone(), columns, primary_key_index as u32);
+        catalogue.add_table(table);
+    }
+
+    catalogue.save().unwrap();
+
+    let model_names: Vec<String> = models.iter().map(|model| model.name.clone()).collect();
+    Ok(Response::builder()
+        .status(StatusCode::CREATED)
+        .body(full(format!("Created following tables: {:?}", model_names)))
+        .unwrap())
 }

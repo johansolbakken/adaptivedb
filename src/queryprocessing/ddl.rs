@@ -118,24 +118,24 @@ impl DDLLexer {
     }
 }
 
-#[derive(Debug, PartialEq)]
-struct Model {
-    name: String,
-    fields: Vec<Field>,
+#[derive(Debug, PartialEq, Clone)]
+pub struct Model {
+    pub name: String,
+    pub fields: Vec<Field>,
 }
 
-#[derive(Debug, PartialEq)]
-struct Field {
-    name: String,
-    field_type: BasicType,
-    is_nullable: bool,
-    is_primary_key: bool,
-    is_foreign_key: bool,
-    references: Option<(String, String)>,
+#[derive(Debug, PartialEq, Clone)]
+pub struct Field {
+    pub name: String,
+    pub field_type: BasicType,
+    pub is_nullable: bool,
+    pub is_primary_key: bool,
+    pub is_foreign_key: bool,
+    pub references: Option<(String, String)>,
 }
 
 struct DDLParser {
-    lexer: DDLLexer,
+    _lexer: DDLLexer,
     tokens: Vec<DDLToken>,
     position: usize,
     errors: Vec<String>,
@@ -150,7 +150,7 @@ impl DDLParser {
         }
         let lexer = lexer;
         Self {
-            lexer,
+            _lexer: lexer,
             tokens,
             position: 0,
             errors: Vec::new(),
@@ -338,6 +338,21 @@ impl DDLAnalyzer {
         }
         errors
     }
+}
+
+pub fn parse(ddl: String) -> Vec<Model> {
+    let lexer = DDLLexer::new(ddl);
+    let mut parser = DDLParser::new(lexer);
+    let mut models = Vec::new();
+    while let Some(model) = parser.parse_model() {
+        models.push(model);
+    }
+    models
+}
+
+pub fn analyze(models: &Vec<Model>) -> Vec<String> {
+    let analyzer = DDLAnalyzer::new(models.clone());
+    analyzer.analyze()
 }
 
 #[cfg(test)]

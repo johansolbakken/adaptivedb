@@ -47,11 +47,14 @@ impl Catalogue {
         Catalogue { tables }
     }
 
-    fn save(&self) -> Result<(), std::io::Error> {
+    pub fn save(&self) -> Result<(), std::io::Error> {
+        if !Self::catalogue_file().exists() {
+            std::fs::create_dir_all(Self::catalogue_file().parent().unwrap())?;
+        }
+
         let mut file = std::fs::File::create(Self::catalogue_file())?;
         let json = serde_json::to_string(self)?;
         file.write_all(json.as_bytes())?;
-        println!("Catalogue saved to {:?}", Self::catalogue_file());
         Ok(())
     }
 
@@ -63,12 +66,14 @@ impl Catalogue {
     }
 
     fn catalogue_file() -> std::path::PathBuf {
-        std::env::temp_dir().join("/adaptivedb/catalogue.json")
+        ".adaptivedb/catalogue.json".into()
     }
-}
 
-impl Drop for Catalogue {
-    fn drop(&mut self) {
-        self.save().unwrap();
+    pub fn table_exists(&self, table_name: &str) -> bool {
+        self.tables.iter().any(|table| table.name == table_name)
+    }
+
+    pub fn add_table(&mut self, table: Table) {
+        self.tables.push(table);
     }
 }

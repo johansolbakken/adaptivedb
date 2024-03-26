@@ -1,6 +1,7 @@
 build
 .cache
 .vscode
+.adaptivedb
 
 # Added by cargo
 
