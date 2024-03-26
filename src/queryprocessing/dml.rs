@@ -321,6 +321,18 @@ pub fn parse(query: &str) -> Option<DMLStatement> {
     parser.parse()
 }
 
+// Analyzer
+// - Check if the table exists
+// - Check if the columns exist
+// - Check if the values are of the correct type
+// - Check if the values are not null if the column is not nullable
+// - Check if the primary key is unique
+// - Check if the foreign key exists
+// - Check if the foreign key is not null
+// - Check if the foreign key is unique
+// - Check if the foreign key is of the correct type
+// - Check if the foreign key is not the primary key
+
 #[cfg(test)]
 mod tests {
     use super::DMLTokenType;
