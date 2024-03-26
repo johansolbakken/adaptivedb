@@ -1,5 +1,3 @@
-use tracing::field;
-
 #[derive(Debug, PartialEq)]
 enum DDLTokenType {
     Model,
@@ -144,15 +142,25 @@ struct Field {
 }
 
 struct DDLParser {
+    lexer: DDLLexer,
     tokens: Vec<DDLToken>,
     position: usize,
+    errors: Vec<String>,
 }
 
 impl DDLParser {
-    fn new(tokens: Vec<DDLToken>) -> Self {
+    fn new(lexer: DDLLexer) -> Self {
+        let mut lexer = lexer;
+        let mut tokens = Vec::new();
+        while let Some(token) = lexer.next_token() {
+            tokens.push(token);
+        }
+        let lexer = lexer;
         Self {
+            lexer,
             tokens,
             position: 0,
+            errors: Vec::new(),
         }
     }
 
@@ -283,7 +291,47 @@ impl DDLParser {
     }
 }
 
-struct DDLAnalyzer {}
+struct DDLAnalyzer {
+    models: Vec<Model>,
+}
+
+impl DDLAnalyzer {
+    fn new(models: Vec<Model>) -> Self {
+        Self { models }
+    }
+
+    fn analyze(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        for check in self.checks() {
+            let check_errors = check(&self);
+            errors.extend(check_errors);
+        }
+        errors
+    }
+
+    fn checks(&self) -> Vec<fn(&Self) -> Vec<String>> {
+        vec![Self::every_model_has_primary_key]
+    }
+
+    fn every_model_has_primary_key(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        for model in self.models.iter() {
+            let mut primary_key_count = 0;
+            for field in &model.fields {
+                if field.is_primary_key {
+                    primary_key_count += 1;
+                }
+            }
+            if primary_key_count != 1 {
+                errors.push(format!(
+                    "Model {} has {} primary keys, expected 1",
+                    model.name, primary_key_count
+                ));
+            }
+        }
+        errors
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -408,12 +456,8 @@ mod tests {
                 },
             ],
         }];
-        let mut lexer = DDLLexer::new(ddl.to_string());
-        let mut tokens = Vec::new();
-        while let Some(token) = lexer.next_token() {
-            tokens.push(token);
-        }
-        let mut parser = DDLParser::new(tokens);
+        let lexer = DDLLexer::new(ddl.to_string());
+        let mut parser = DDLParser::new(lexer);
         let mut models = Vec::new();
         while let Some(model) = parser.parse_model() {
             models.push(model);
@@ -421,10 +465,19 @@ mod tests {
         assert_eq!(models, correct_model);
     }
 
-    // #[test]
-    // fn test_ddl_correct() {
-    //     let lexer = DDLLexer {};
-    //     let parser = DDLParser {};
-    //     let analyzer = DDLAnalyzer {};
-    // }
+    #[test]
+    fn test_ddl_analyzer_every_model_has_primary_key() {
+        let ddl = "model Employee { EmployeeID String }";
+        let correct_errors = vec!["Model Employee has 0 primary keys, expected 1".to_string()];
+
+        let lexer = DDLLexer::new(ddl.to_string());
+        let mut parser = DDLParser::new(lexer);
+        let mut models = Vec::new();
+        while let Some(model) = parser.parse_model() {
+            models.push(model);
+        }
+        let analyzer = DDLAnalyzer::new(models);
+        let errors = analyzer.analyze();
+        assert_eq!(errors, correct_errors);
+    }
 }
