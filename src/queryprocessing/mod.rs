@@ -1,3 +1,5 @@
+use crate::transaction::wal;
+
 pub mod ddl;
 pub mod dml;
 
@@ -11,6 +13,15 @@ pub fn execute(statement: dml::DMLStatement) -> serde_json::Value {
 }
 
 fn handle_insert(insert_statement: dml::DMLInsertStatement) -> serde_json::Value {
+    let table_name = insert_statement.table_name.clone();
+    for i in 0..insert_statement.columns.len() {
+        wal::write(
+            &table_name,
+            &insert_statement.columns[i],
+            &insert_statement.values[i],
+        );
+    }
+    
     if !std::path::Path::new(&global_file_path()).exists() {
         let _ = std::fs::create_dir_all(".adaptivedb");
         let _ = std::fs::write(&global_file_path(), "[{
@@ -40,7 +51,6 @@ fn handle_insert(insert_statement: dml::DMLInsertStatement) -> serde_json::Value
     table.as_array_mut().unwrap().push(serde_json::json!(map));
     let data = serde_json::to_string_pretty(&data).unwrap();
     let _ = std::fs::write(&global_file_path(), data);
-
 
     serde_json::json!({
         "success": true

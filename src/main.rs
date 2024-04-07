@@ -20,6 +20,7 @@ use tracing_subscriber::FmtSubscriber;
 mod catalogue;
 mod handler;
 mod queryprocessing;
+mod transaction;
 
 async fn handler(
     req: Request<hyper::body::Incoming>,
