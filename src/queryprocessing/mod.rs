@@ -1,5 +1,6 @@
 pub mod ddl;
 pub mod dml;
+pub mod sql;
 
 pub fn execute(statement: dml::DMLStatement) -> serde_json::Value {
     match statement {
